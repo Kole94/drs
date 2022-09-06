@@ -1,4 +1,4 @@
-package Spark;
+package threads;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -28,7 +28,6 @@ public class Film implements Serializable, Comparator<Film> {
 	public Film(String id, String rating) {
 		super();
 		this.id = id;
-
 		if(!(rating.equals("averageRating"))) {
 			this.rating = Float.parseFloat(rating);
 
@@ -86,3 +85,4 @@ public class Film implements Serializable, Comparator<Film> {
 		return (int)(o1.getRating() - o2.getRating());
 	}
 }
+

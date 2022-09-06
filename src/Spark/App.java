@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -22,12 +23,9 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
-
-import Spark.Film;
 import scala.Tuple2;
 
 public class App {
-
 	public static void main(String[] args) {
 		final int C = 3;
 
@@ -40,7 +38,7 @@ public class App {
 		JavaRDD<String> lines = sc.textFile("/Users/konstantinlijakovic/master_study/dsitribuirano/title-basics.csv");
 		JavaRDD<String> ratings = sc.textFile("/Users/konstantinlijakovic/master_study/dsitribuirano/title-ratings.csv");
 
-		JavaPairRDD<String, Film> pairs = lines.mapToPair(
+		JavaPairRDD<String, Film> genreMoviesPairs = lines.mapToPair(
 				s ->  {
 						String [] filmArr = s.split(";");
 						if((filmArr[1].equals("movie") || filmArr[1].equals("tvMovie")) && !filmArr[7].equals("\\N")) {
@@ -48,14 +46,14 @@ public class App {
 						return new Tuple2<String, Film>(f, new Film(filmArr[0], filmArr[3],f, filmArr[7]));
 						}
 				}
-						return new Tuple2<String, Film>("f", new Film("none", "none","none", "\\N"));
+						return new Tuple2<String, Film>("\\N", new Film("none", "none","none", "\\N"));
 	});
-		
-		Map<String, Iterable<Film>> all = pairs.groupByKey().collectAsMap();
-		HashMap<String, Film> hashMap = new HashMap();
+	
+		Map<String, Iterable<Film>> genreMoviesMap = genreMoviesPairs.groupByKey().collectAsMap();
+		HashMap<String, Film> longestDurationMoviesMap = new HashMap();
 
 		
-		for (Entry<String, Iterable<Film>> entry : all.entrySet()) {
+		for (Entry<String, Iterable<Film>> entry : genreMoviesMap.entrySet()) {
 			List<Film>  filmsList = new ArrayList<>();
 			Iterable<Film> films= entry.getValue();
 			
@@ -73,30 +71,35 @@ public class App {
 	        	}	        	
 	          }
 	       );
-			}
-			
-			
-			if(filmsList.size() != 0) {
-				
-				Film film= filmsList.get(filmsList.size()-1);
-				System.out.println(film.getDuration() + "   " + film.getName() + "  " + film.getGenre());
-				hashMap.put(film.getId(), film);
-			}
-
-	    }
-		
-		
-		Buffer<String> consumerBuffer1 = new BufferNet<>("localhost",4001,1);
-		Buffer<Film> consumerBuffer2 = new BufferNet<>("localhost",4001,2);
-		
-		Barrier consumerBarrier = new Barrier(C);
-		for(int i = 1; i <= C; i++) {
-			Consumer c = new Consumer(i, barrier, consumerBuffer1, consumerBuffer2, hashMap);
-			c.start();
 		}
 			
+			if(filmsList.size() != 0) {
+				Film film= filmsList.get(filmsList.size()-1);
+				longestDurationMoviesMap.put(film.getId(), film);
+				System.out.println(film.getName());
+			}
+	    }
 
-	}
+		JavaRDD<String> ratingMoviesPairs = ratings.filter(
+				s ->  longestDurationMoviesMap.containsKey(s.split(";")[0]));
+		List<String> ratingMoviesList = ratingMoviesPairs.collect();
+		HashMap<Float, Film> found = new HashMap();
+		List<Film> b = new ArrayList<>();
 
+	    ratingMoviesList.forEach(e-> {
+			Film f = longestDurationMoviesMap.get(e.split(";")[0]);
+			f.setRating(Float.parseFloat(e.split(";")[1]));
+			b.add(f);
+		});
+
+	    
+	    Collections.sort(b, new Comparator<Film>() {
+	        public int compare(Film o1, Film o2) {
+	            return o1.getRating().compareTo(o2.getRating());
+	        }
+	    });
 	
+		b.forEach(e->System.out.println(e.getRating() + "   "+ e.getName() + "  "+ e.getGenre()));
+	}
 }
+
