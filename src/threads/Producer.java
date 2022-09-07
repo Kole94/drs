@@ -7,7 +7,6 @@ import java.util.List;
 
 public class Producer extends Thread {
 	Buffer<String> buffer;
-//	Buffer<String> buffer2;
 
 	String filename;
 	String filename2;
@@ -17,10 +16,8 @@ public class Producer extends Thread {
 		super();
 		setName("Producer");
 		this.filename2= filename2;
-
 		this.filename = filename;
 		this.buffer = buffer;
-//		this.buffer2 = buffer2;
 
 	}
 
@@ -29,16 +26,16 @@ public class Producer extends Thread {
 				new FileReader(filename))) {
 			String line = br.readLine();
 			while ((line = br.readLine()) != null) {
-				System.out.println(line);
 				buffer.put(line);
 			}
-			if((line = br.readLine()) == null){
+			if(line  == null){
 				try (BufferedReader br2 = new BufferedReader(
-						new FileReader(filename))) {
+						new FileReader(filename2))) {
 					String line2 = br2.readLine();
 					while ((line2 = br2.readLine()) != null) {
 						buffer.put(line2);
 					}
+					buffer.put(null);
 				}catch (Exception e) {
 					e.printStackTrace();
 				}

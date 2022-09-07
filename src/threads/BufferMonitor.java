@@ -26,7 +26,7 @@ public class BufferMonitor<T> extends Buffer<T> {
 			notifyAll();
 			return;
 		}
-		if(buffer.size() == capacity && !end) {
+		while(buffer.size() == capacity && !end) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
@@ -40,7 +40,7 @@ public class BufferMonitor<T> extends Buffer<T> {
 
 	@Override
 	public synchronized T get() {
-		if(buffer.size() == 0 && !end) {
+		while(buffer.size() == 0 && !end) {
 			try {
 				wait();
 			} catch (InterruptedException e) {

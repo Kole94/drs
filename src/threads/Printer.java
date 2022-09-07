@@ -1,8 +1,5 @@
 package threads;
 
-import Spark.Buffer;
-import Spark.Film;
-
 public class Printer extends Thread {
 	Buffer<Film> buffer3;
 
@@ -11,7 +8,8 @@ public class Printer extends Thread {
 		this.buffer3 = buffer3;
 		// TODO Auto-generated constructor stub
 	}
-	
+
+
 	public void run() {
 		while(true) {
 			

@@ -21,6 +21,7 @@ public class Barrier {
 
 
 	public void sync() {
+		
 		doorIn.acquireUninterruptibly();
 		cnt++;
 		if(cnt == cap) {
